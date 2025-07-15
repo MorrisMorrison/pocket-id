@@ -35,6 +35,51 @@ test('Create OIDC client', async ({ page }) => {
 		.then((res) => expect.soft(res.status()).toBe(200));
 });
 
+test('Create OIDC client with custom client ID', async ({ page }) => {
+	await page.goto('/settings/admin/oidc-clients');
+	const oidcClient = oidcClients.pingvinShare;
+	const customClientId = "pingvinShare";
+	
+	await page.getByRole('button', { name: 'Add OIDC Client' }).click();
+	await page.getByLabel('Name').fill(oidcClient.name);
+
+	await page.getByRole('button', { name: 'Add' }).nth(1).click();
+	await page.getByTestId('callback-url-1').fill(oidcClient.callbackUrl);
+	await page.getByRole('button', { name: 'Add another' }).click();
+	await page.getByTestId('callback-url-2').fill(oidcClient.secondCallbackUrl!);
+	await page.getByLabel('logo').setInputFiles('assets/pingvin-share-logo.png');
+	
+	await page.getByRole('button', { name: 'Show Advanced Options' }).click();
+	
+	await expect(page.getByRole('switch', { name: 'Generate Client ID' })).toBeChecked();
+	
+	await page.getByRole('switch', { name: 'Generate Client ID' }).click();
+	
+	await expect(page.getByRole('switch', {name: 'Generate Client ID'})).not.toBeChecked();
+	await expect(page.getByRole('textbox', {name: 'Custom Client ID'})).toBeEnabled();
+	
+	await page.getByRole('textbox', {name: 'Custom Client ID'}).fill(customClientId);
+	
+	await page.getByRole('button', { name: 'Save' }).click();
+
+	const clientId = await page.getByTestId('client-id').textContent();
+
+	await expect(page.locator('[data-type="success"]')).toHaveText(
+		'OIDC client created successfully'
+	);
+	
+	expect(clientId).not.toBeNull();
+	expect(clientId).toBe(customClientId);
+	expect((await page.getByTestId('client-secret').textContent())?.length).toBe(32);
+	await expect(page.getByLabel('Name')).toHaveValue(oidcClient.name);
+	await expect(page.getByTestId('callback-url-1')).toHaveValue(oidcClient.callbackUrl);
+	await expect(page.getByTestId('callback-url-2')).toHaveValue(oidcClient.secondCallbackUrl!);
+	await expect(page.getByRole('img', { name: `${oidcClient.name} logo` })).toBeVisible();
+	await page.request
+		.get(`/api/oidc/clients/${clientId}/logo`)
+		.then((res) => expect.soft(res.status()).toBe(200));
+});
+
 test('Edit OIDC client', async ({ page }) => {
 	const oidcClient = oidcClients.nextcloud;
 	await page.goto(`/settings/admin/oidc-clients/${oidcClient.id}`);

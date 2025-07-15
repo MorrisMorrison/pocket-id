@@ -31,6 +31,7 @@
 	let logoDataURL: string | null = $state(
 		existingClient?.hasLogo ? cachedOidcClientLogo.getUrl(existingClient!.id) : null
 	);
+	let generateClientID = $state(true);
 
 	const client = {
 		name: existingClient?.name || '',
@@ -38,6 +39,7 @@
 		logoutCallbackURLs: existingClient?.logoutCallbackURLs || [],
 		isPublic: existingClient?.isPublic || false,
 		pkceEnabled: existingClient?.pkceEnabled || false,
+		customClientID: '',
 		credentials: {
 			federatedIdentities: existingClient?.credentials?.federatedIdentities || []
 		}
@@ -49,6 +51,7 @@
 		logoutCallbackURLs: z.array(z.string().nonempty()),
 		isPublic: z.boolean(),
 		pkceEnabled: z.boolean(),
+		customClientID: z.string().max(50),
 		credentials: z.object({
 			federatedIdentities: z.array(
 				z.object({
@@ -163,8 +166,26 @@
 		</div>
 	</div>
 
+	<div class="border-border mt-8 border-t"></div>
+
 	{#if showAdvancedOptions}
-		<div class="mt-5 md:col-span-2" transition:slide={{ duration: 200 }}>
+		<div class="mt-8 grid grid-cols-1 space-y-4 gap-x-3 gap-y-7 sm:flex-row md:grid-cols-2">
+			<SwitchWithLabel
+				id="generate-client-id"
+				label={m.generate_client_id()}
+				description={m.generate_client_id_generates_random_uuid()}
+				bind:checked={generateClientID}
+			/>
+			<FormInput
+				id="custom-client-id"
+				label={m.custom_client_id()}
+				disabled={generateClientID}
+				placeholder={generateClientID ? 'Will be auto-generated' : 'Enter custom client ID'}
+				bind:input={$inputs.customClientID}
+				class="w-full"
+			/>
+		</div>
+		<div class="mt-8 md:col-span-2" transition:slide={{ duration: 200 }}>
 			<FederatedIdentitiesInput
 				client={existingClient}
 				bind:federatedIdentities={$inputs.credentials.value.federatedIdentities}
@@ -175,6 +196,7 @@
 
 	<div class="relative mt-5 flex justify-center">
 		<Button
+			id="show-advanced-options"
 			variant="ghost"
 			class="text-muted-foregroun"
 			onclick={() => (showAdvancedOptions = !showAdvancedOptions)}

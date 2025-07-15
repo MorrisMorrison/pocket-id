@@ -31,6 +31,7 @@ type OidcClientCreateDto struct {
 	LogoutCallbackURLs []string                 `json:"logoutCallbackURLs"`
 	IsPublic           bool                     `json:"isPublic"`
 	PkceEnabled        bool                     `json:"pkceEnabled"`
+	CustomClientID     string                   `json:"customClientID"`
 	Credentials        OidcClientCredentialsDto `json:"credentials"`
 }
 

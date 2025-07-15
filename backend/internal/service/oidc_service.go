@@ -726,6 +726,10 @@ func updateOIDCClientModelFromDto(client *model.OidcClient, input *dto.OidcClien
 	// PKCE is required for public clients
 	client.PkceEnabled = input.IsPublic || input.PkceEnabled
 
+	if input.CustomClientID != "" {
+		client.ID = input.CustomClientID
+	}
+
 	// Credentials
 	if len(input.Credentials.FederatedIdentities) > 0 {
 		client.Credentials.FederatedIdentities = make([]model.OidcClientFederatedIdentity, len(input.Credentials.FederatedIdentities))
